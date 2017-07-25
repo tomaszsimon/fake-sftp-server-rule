@@ -21,9 +21,11 @@ Fake SFTP Server Rule is available from [Maven Central](http://search.maven.org/
     <dependency>
       <groupId>com.github.stefanbirkner</groupId>
       <artifactId>fake-sftp-server-rule</artifactId>
-      <version>1.1.1</version>
+      <version>2.0.0</version>
     </dependency>
 
+If you upgrade from a version < 2.x to the newest version please read the last
+section of this readme.
 
 ## Usage
 
@@ -44,9 +46,10 @@ You can interact with the SFTP server by using the SFTP protocol with an
 arbitrary username and password. (The server accepts every combination of
 username and password.)
 
-The port of the server is obtained by `sftpServer.getPort()`. You can change it
-by calling `setPort(int)`. If you do this from within a test then the server
-gets restarted. The time-consuming restart can be avoided by setting the port
+By default the SFTP server listens on an auto-allocated port. During the test
+this port can be obtained by `sftpServer.getPort()`. It can be changed by
+calling `setPort(int)`. If you do this from within a test then the server gets
+restarted. The time-consuming restart can be avoided by setting the port
 immediately after creating the rule.
 
     public class TestClass {
@@ -167,3 +170,15 @@ CI.
 * Commit the modified `pom.xml` and `README.md`.
 * Run `mvn clean deploy` with JDK 8.
 * Add a tag for the release: `git tag fake-sftp-server-rule-X.X.X`
+
+
+## Upgrading from 0.x.y or 1.x.y to version >= 2
+
+In older versions the SFTP server listened to port 23454 by default. From
+version 2 on it selects an arbitrary free port by default. If your tests fail
+after an upgrade you may consider to restore the old behaviour by immediately
+setting the old port after creating the rule.
+
+    @Rule
+    public final FakeSftpServerRule sftpServer = new FakeSftpServerRule()
+        .setPort(23454);

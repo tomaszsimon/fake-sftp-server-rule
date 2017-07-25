@@ -36,11 +36,11 @@ import static java.util.Collections.singletonList;
  * <p>You can interact with the SFTP server by using the SFTP protocol with an
  * arbitrary username and password. (The server accepts every combination of
  * username and password.)
- * <p>The port of the server is obtained by
- * {@link #getPort() sftpServer.getPort()}. You can change it by calling
- * {@link #setPort(int)}. If you do this from within a test then the server gets
- * restarted. The time-consuming restart can be avoided by setting the port
- * immediately after creating the rule.
+ * <p>By default the SFTP server listens on an auto-allocated port. During the
+ * test this port can be obtained by {@link #getPort() sftpServer.getPort()}. It
+ * can be changed by calling {@link #setPort(int)}. If you do this from within a
+ * test then the server gets restarted. The time-consuming restart can be
+ * avoided by setting the port immediately after creating the rule.
  * <pre>
  * public class TestClass {
  *   &#064;Rule
@@ -124,18 +124,30 @@ import static java.util.Collections.singletonList;
  * <p>The method returns {@code true} iff the file exists and it is not a directory.
  */
 public class FakeSftpServerRule implements TestRule {
-    private int port = 23454;
+    private int port = 0;
 
     private FileSystem fileSystem;
     private SshServer server;
 
     /**
-     * Returns the port of the SFTP server.
+     * Returns the port of the SFTP server. If the SFTP server listens on an
+     * auto-allocated port (that means you didn't call {@link #setPort(int)})
+     * then you can only call this method during the test.
      *
      * @return the port of the SFTP server.
+     * @throws IllegalStateException if you call the method outside of a test
+     * but haven't called {@link #setPort(int)}) before.
      */
     public int getPort() {
-        return port;
+        if (port == 0)
+            return getPortFromServer();
+        else
+            return port;
+    }
+
+    private int getPortFromServer() {
+        verifyThatTestIsRunning("call getPort()");
+        return server.getPort();
     }
 
     /**
